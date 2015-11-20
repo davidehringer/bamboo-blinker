@@ -21,10 +21,12 @@ Or to check health at a different interval (60 seconds in this case):
 
 ## Building
 
+This project depends on [goblync](https://github.com/davidehringer/goblync).
+
 ```
 go get github.com/boombuler/hid
 go get github.com/davidehringer/goblync
 go build
 ```
 
-See notes for github.com/boombuler/hid if you have issues building for different platforms.
+See notes for https://github.com/boombuler/hid if you have issues building for different platforms.
