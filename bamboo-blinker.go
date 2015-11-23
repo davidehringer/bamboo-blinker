@@ -69,8 +69,9 @@ func main() {
 			}		
 			fmt.Printf("Interval increased to %d seconds since TimeToEvaluate was %d ms\n" , activeInterval,bunnyStatus.ProcessTime)
 		}else{
-			activeInterval = defaultInterval;
+
 			if(defaultInterval != activeInterval){
+				activeInterval = defaultInterval;
 				fmt.Printf("Interval reset to %d seconds since TimeToEvaluate was %d ms\n" , activeInterval,bunnyStatus.ProcessTime)
 			}			
 		}
@@ -104,7 +105,7 @@ func (m *monitor) SetHealthy() {
 			m.light.SetColor([3]byte{255 - byte(i), byte(i), 0x00})
 			time.Sleep(13 * time.Millisecond)
 		}
-		//m.light.Play(28)
+		m.light.Play(28)
 	}
 }
 
@@ -116,10 +117,10 @@ func (m *monitor) SetUnhealthy() {
 			time.Sleep(13 * time.Millisecond)
 		}
 		m.light.SetBlinkRate(blync.BlinkMedium)
-		//m.light.Play(52)
+		m.light.Play(52)
 		// We using a never ending sound because it was one of the only ones that 
 		// had some sound of urgency to it.  But we don't want it to keep playing
 		time.Sleep(time.Second * 15)
-		//m.light.StopPlay()
+		m.light.StopPlay()
 	}
 }
