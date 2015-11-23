@@ -13,22 +13,35 @@ import (
 
 func main() {
 	numArgs := len(os.Args)
-	if numArgs != 2 && numArgs != 3 {
-		fmt.Println("Usage: bamboo-blinker URL [INTERVAL_SECONDS]")
+	if numArgs < 2 {
+		fmt.Println("Usage: bamboo-blinker URL [INTERVAL_SECONDS] [BACKOFF_MS]")
 		os.Exit(1)
 	}
 	url := os.Args[1]
 	buildBunny := bunny.NewBunny(url)
 
-	interval := 10
+	defaultInterval := 10
 	if numArgs == 3 {
 		value, err := strconv.ParseInt(os.Args[2], 10, 32)
 		if err != nil {
 			fmt.Println("INTERVAL_SECONDS must be an integer")
 			os.Exit(1)
 		}
-		interval = int(value)
+		defaultInterval = int(value)
 	}
+	activeInterval := defaultInterval
+
+	backoffLimit := 100
+	if numArgs == 4 {
+		value, err := strconv.ParseInt(os.Args[3], 10, 32)
+		if err != nil {
+			fmt.Println("BACKOFF_MS must be an integer")
+			os.Exit(1)
+		}
+		backoffLimit = int(value)
+	}
+
+
 
 	light := blync.NewBlyncLight()
 	light.SetColor(blync.Green)
@@ -44,13 +57,30 @@ func main() {
 	}()
 
 	monitor := NewMonitor(light)
+
 	for {
-		if buildBunny.Healthy() {
-			monitor.SetHealthy()
-		} else {
-			monitor.SetUnhealthy()
+		bunnyStatus := buildBunny.Update()
+
+		//backoff if more than backoffLimit ms to calculate this on server side.
+		if bunnyStatus.ProcessTime > backoffLimit{
+			activeInterval = activeInterval * 2;	
+			if activeInterval > 600 {
+				activeInterval = 600
+			}		
+			fmt.Printf("Interval increased to %d seconds since TimeToEvaluate was %d ms\n" , activeInterval,bunnyStatus.ProcessTime)
+		}else{
+			activeInterval = defaultInterval;
+			if(defaultInterval != activeInterval){
+				fmt.Printf("Interval reset to %d seconds since TimeToEvaluate was %d ms\n" , activeInterval,bunnyStatus.ProcessTime)
+			}			
 		}
-		time.Sleep(time.Second * time.Duration(interval))
+
+		if bunnyStatus.Status == "OK" {
+			monitor.SetHealthy();
+		}else{
+			monitor.SetUnhealthy();			
+		}
+		time.Sleep(time.Second * time.Duration(activeInterval))
 	}
 }
 
@@ -74,7 +104,7 @@ func (m *monitor) SetHealthy() {
 			m.light.SetColor([3]byte{255 - byte(i), byte(i), 0x00})
 			time.Sleep(13 * time.Millisecond)
 		}
-		m.light.Play(28)
+		//m.light.Play(28)
 	}
 }
 
@@ -86,10 +116,10 @@ func (m *monitor) SetUnhealthy() {
 			time.Sleep(13 * time.Millisecond)
 		}
 		m.light.SetBlinkRate(blync.BlinkMedium)
-		m.light.Play(52)
+		//m.light.Play(52)
 		// We using a never ending sound because it was one of the only ones that 
 		// had some sound of urgency to it.  But we don't want it to keep playing
 		time.Sleep(time.Second * 15)
-		m.light.StopPlay()
+		//m.light.StopPlay()
 	}
 }

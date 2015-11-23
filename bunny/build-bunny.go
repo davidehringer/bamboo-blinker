@@ -16,37 +16,40 @@ type HttpBunny struct {
 	url string
 }
 
+type BunnyStatus struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
+	ProcessTime int `json:"timeToEvaluate"`
+}
+
 func NewBunny(url string) (bunny HttpBunny) {
 	bunny.url = url
 	return
 }
 
-func (bunny HttpBunny) Healthy() bool {
+
+func(bunny HttpBunny) Update() (bunnyStatus BunnyStatus) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
+
+
 	res, err := client.Get(bunny.url)
 	if err != nil {
 		fmt.Println(err)
-		return false
+		bunnyStatus.Status = "ERROR"
 	}
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
 		fmt.Println(err)
-		return false
+		bunnyStatus.Status = "ERROR"
+	}else{
+		json.Unmarshal(body, &bunnyStatus)
 	}
-
-	bunnyStatus := BunnyStatus{}
-	json.Unmarshal(body, &bunnyStatus)
-	if bunnyStatus.Status == "OK" {
-		return true
-	}
-	return false
+	//fmt.Println(string(body))
+	
+	return
 }
 
-type BunnyStatus struct {
-	Name   string `json:"name"`
-	Status string `json:"status"`
-}

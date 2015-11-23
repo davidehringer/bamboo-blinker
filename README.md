@@ -19,6 +19,14 @@ Or to check health at a different interval (60 seconds in this case):
 ./bamboo-blinker https://your-bamboo.com/rest/build-bunny/1.0/summary/120edef1-a493-4813-82db-edb6b078cf6b.json 60
 ```
 
+## Backoff Logic
+To prevent dozens or hundreds of clients from beating up bamboo by checking too frequently, the application will double the delay interval up to 10 minutes when the returned timeToEvaluate > 150ms.  The interval will be reset to argument #2 (default 10s) as soon as the first response is within limits.
+
+To override the acceptable limit for this value, pass a 3rd argument.
+```
+./bamboo-blinker https://your-bamboo.com/rest/build-bunny/1.0/summary/120edef1-a493-4813-82db-edb6b078cf6b.json 60 200
+```
+
 ## Building
 
 This project depends on [goblync](https://github.com/davidehringer/goblync).
